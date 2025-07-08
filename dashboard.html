@@ -3,233 +3,1497 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Home Dashboard</title>
+    <title>Smart Home Security Dashboard</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js for analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --danger: #ef4444;
+            --danger-dark: #dc2626;
+            --success: #22c55e;
+            --success-dark: #16a34a;
+            --warning: #f59e0b;
+            --warning-dark: #d97706;
+            --info: #3b82f6;
+            --info-dark: #2563eb;
+        }
+        
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #e2e8f0; /* Light blue-gray background */
+            background-color: #f3f4f6;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 2rem;
+            padding: 1rem;
+            color: #1f2937;
         }
+        
         .dashboard-container {
             background-color: #ffffff;
             padding: 2rem;
             border-radius: 1rem;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
             width: 100%;
-            max-width: 900px;
+            max-width: 1200px;
             display: grid;
-            grid-template-columns: 1fr;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 1.5rem;
+            margin-bottom: 2rem;
         }
-        @media (min-width: 768px) {
-            .dashboard-container {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
+        
         .card {
-            background-color: #f8fafc; /* Lighter card background */
+            background-color: #ffffff;
             padding: 1.5rem;
             border-radius: 0.75rem;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
             display: flex;
             flex-direction: column;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
             align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #111827;
+        }
+        
+        .card-icon {
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+        
+        .card-body {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
             justify-content: center;
         }
-        .security-status-armed {
-            background-color: #ef4444; /* Red-500 */
-            color: white;
-            font-weight: bold;
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            transition: background-color 0.3s ease;
-        }
-        .security-status-disarmed {
-            background-color: #22c55e; /* Green-500 */
-            color: white;
-            font-weight: bold;
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            transition: background-color 0.3s ease;
-        }
-        .control-button {
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s ease-in-out;
-            margin: 0.5rem;
-        }
-        .arm-button {
-            background-color: #dc2626; /* Red-600 */
-            color: white;
-        }
-        .arm-button:hover {
-            background-color: #b91c1c; /* Red-700 */
-        }
-        .disarm-button {
-            background-color: #16a34a; /* Green-600 */
-            color: white;
-        }
-        .disarm-button:hover {
-            background-color: #15803d; /* Green-700 */
-        }
-        .device-icon {
-            font-size: 2.5rem;
-            margin-bottom: 0.75rem;
-            color: #4f46e5; /* Indigo-600 */
-        }
-        .device-status {
+        
+        .status-badge {
+            display: inline-block;
+            padding: 0.35rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
             font-weight: 500;
-            color: #4b5563; /* Gray-700 */
         }
+        
         .status-active {
-            color: #22c55e; /* Green-500 */
+            background-color: rgba(34, 197, 94, 0.1);
+            color: var(--success);
         }
+        
         .status-inactive {
-            color: #ef4444; /* Red-500 */
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
         }
+        
         .status-alert {
-            color: #f59e0b; /* Amber-500 */
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+        
+        .status-warning {
+            background-color: rgba(251, 191, 36, 0.1);
+            color: #f59e0b;
+        }
+        
+        .status-info {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: var(--info);
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.625rem 1.25rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            outline: none;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: var(--danger-dark);
+        }
+        
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: var(--success-dark);
+        }
+        
+        .btn-warning {
+            background-color: var(--warning);
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background-color: var(--warning-dark);
+        }
+        
+        .btn-secondary {
+            background-color: #e5e7eb;
+            color: #4b5563;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #d1d5db;
+        }
+        
+        .security-status {
+            font-size: 1.25rem;
+            font-weight: 600;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            margin: 1rem 0;
+            transition: all 0.3s ease;
+        }
+        
+        .security-status-armed {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 2px solid var(--danger);
+        }
+        
+        .security-status-disarmed {
+            background-color: rgba(34, 197, 94, 0.1);
+            color: var(--success);
+            border: 2px solid var(--success);
+        }
+        
+        .device-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0.5rem 0;
+            color: #111827;
+        }
+        
+        .device-unit {
+            font-size: 1rem;
+            color: #6b7280;
+            margin-left: 0.25rem;
+        }
+        
+        .device-description {
+            color: #6b7280;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -0.5rem;
+            right: -0.5rem;
+            background-color: var(--danger);
+            color: white;
+            border-radius: 9999px;
+            width: 1.25rem;
+            height: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .alert-card {
+            border-left: 4px solid var(--danger);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+            }
+        }
+        
+        .activity-log {
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+        
+        .activity-log::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .activity-log::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .activity-log::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 10px;
+        }
+        
+        .activity-log::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+        
+        .log-entry {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .log-time {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            min-width: 60px;
+        }
+        
+        .log-icon {
+            margin: 0 0.75rem;
+            font-size: 1rem;
+        }
+        
+        .log-message {
+            flex-grow: 1;
+            font-size: 0.875rem;
+        }
+        
+        .log-critical {
+            color: var(--danger);
+        }
+        
+        .log-warning {
+            color: var(--warning);
+        }
+        
+        .log-info {
+            color: var(--info);
+        }
+        
+        .log-success {
+            color: var(--success);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .tab-button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-weight: 500;
+            color: #6b7280;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+        
+        .tab-button.active {
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
+        }
+        
+        .sensor-gauge {
+            width: 100%;
+            height: 120px;
+            position: relative;
+            margin: 1rem 0;
+        }
+        
+        .dark-mode {
+            background-color: #1f2937;
+            color: #f3f4f6;
+        }
+        
+        .dark-mode .card {
+            background-color: #374151;
+            border-color: #4b5563;
+            color: #f3f4f6;
+        }
+        
+        .dark-mode .card-header {
+            border-color: #4b5563;
+        }
+        
+        .dark-mode .card-title {
+            color: #f3f4f6;
+        }
+        
+        .dark-mode .device-value {
+            color: #f3f4f6;
+        }
+        
+        .dark-mode .device-unit {
+            color: #9ca3af;
+        }
+        
+        .dark-mode .device-description {
+            color: #9ca3af;
+        }
+        
+        .dark-mode .activity-log::-webkit-scrollbar-track {
+            background: #374151;
+        }
+        
+        .dark-mode .activity-log::-webkit-scrollbar-thumb {
+            background: #6b7280;
+        }
+        
+        .dark-mode .log-entry {
+            border-color: #4b5563;
+        }
+        
+        .dark-mode .log-time {
+            color: #9ca3af;
         }
     </style>
 </head>
 <body>
-    <h1 class="text-4xl font-bold text-gray-800 mb-8">Smart Home Security Dashboard</h1>
+    <div class="w-full max-w-7xl mx-auto">
+        <header class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 dark:text-white">Smart Home Security Dashboard</h1>
+            <div class="flex items-center gap-4">
+                <button id="darkModeToggle" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600">
+                    <i class="fas fa-moon dark:hidden"></i>
+                    <i class="fas fa-sun hidden dark:block"></i>
+                </button>
+                <div class="relative">
+                    <button id="notificationsButton" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 relative">
+                        <i class="fas fa-bell"></i>
+                        <span id="notificationCount" class="notification-badge hidden">0</span>
+                    </button>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <span class="font-medium hidden md:block">Admin</span>
+                </div>
+            </div>
+        </header>
 
-    <div class="dashboard-container">
-        <!-- Security System Status Card -->
-        <div class="card col-span-full md:col-span-1">
-            <h3 class="text-2xl font-semibold text-gray-700 mb-4">System Status</h3>
-            <div id="securityStatus" class="security-status-disarmed text-lg">Disarmed</div>
-            <div class="mt-6 flex space-x-4">
-                <button id="armButton" class="control-button arm-button">Arm System</button>
-                <button id="disarmButton" class="control-button disarm-button">Disarm System</button>
+        <!-- Tabs Navigation -->
+        <div class="flex border-b border-gray-200 dark:border-gray-600 mb-6">
+            <button class="tab-button active" data-tab="dashboard">Dashboard</button>
+            <button class="tab-button" data-tab="devices">Devices</button>
+            <button class="tab-button" data-tab="analytics">Analytics</button>
+            <button class="tab-button" data-tab="settings">Settings</button>
+        </div>
+
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content active">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <!-- Security Status Card -->
+                <div class="card col-span-1 lg:col-span-2">
+                    <div class="card-header">
+                        <h2 class="card-title">Security System</h2>
+                        <i class="card-icon fas fa-shield-alt"></i>
+                    </div>
+                    <div class="card-body">
+                        <div id="securityStatus" class="security-status security-status-disarmed">Disarmed</div>
+                        <div class="flex flex-wrap justify-center gap-4 mt-4">
+                            <button id="armButton" class="btn btn-danger">
+                                <i class="fas fa-lock"></i> Arm System
+                            </button>
+                            <button id="disarmButton" class="btn btn-success">
+                                <i class="fas fa-lock-open"></i> Disarm System
+                            </button>
+                            <button id="panicButton" class="btn btn-warning">
+                                <i class="fas fa-bell"></i> Panic Alarm
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Weather Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Weather Conditions</h2>
+                        <i class="card-icon fas fa-cloud-sun"></i>
+                    </div>
+                    <div class="card-body">
+                        <div class="flex items-center justify-center gap-4">
+                            <i id="weatherIcon" class="fas fa-sun text-5xl text-yellow-400"></i>
+                            <div>
+                                <div class="device-value"><span id="temperature">72</span><span class="device-unit">°F</span></div>
+                                <div id="weatherCondition" class="device-description">Sunny</div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 mt-4">
+                            <div class="text-center">
+                                <div class="text-sm text-gray-500">Humidity</div>
+                                <div class="font-semibold"><span id="humidity">45</span><span class="text-sm">%</span></div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-sm text-gray-500">Wind</div>
+                                <div class="font-semibold"><span id="windSpeed">8</span><span class="text-sm"> mph</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                <!-- Front Door Camera Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Front Door Camera</h2>
+                        <i class="card-icon fas fa-video"></i>
+                    </div>
+                    <div class="card-body">
+                        <div class="bg-gray-100 dark:bg-gray-700 rounded-lg aspect-video flex items-center justify-center mb-4">
+                            <i class="fas fa-camera text-4xl text-gray-400"></i>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span id="cameraStatus" class="status-badge status-active">Active</span>
+                            <div class="flex gap-2">
+                                <button class="btn btn-secondary btn-sm" title="Expand Camera View">
+                                    <i class="fas fa-expand"></i>
+                                </button>
+                                <button class="btn btn-primary btn-sm" title="Play Camera Feed">
+                                    <i class="fas fa-play"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Motion Sensor Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Motion Sensors</h2>
+                        <i class="card-icon fas fa-walking"></i>
+                    </div>
+                    <div class="card-body">
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div class="text-center">
+                                <div class="text-sm text-gray-500">Living Room</div>
+                                <div id="livingRoomMotion" class="status-badge status-active">No Motion</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-sm text-gray-500">Kitchen</div>
+                                <div id="kitchenMotion" class="status-badge status-active">No Motion</div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="text-center">
+                                <div class="text-sm text-gray-500">Back Door</div>
+                                <div id="backDoorMotion" class="status-badge status-active">No Motion</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-sm text-gray-500">Garage</div>
+                                <div id="garageMotion" class="status-badge status-active">No Motion</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Door/Window Sensors Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Door/Window Sensors</h2>
+                        <i class="card-icon fas fa-door-open"></i>
+                    </div>
+                    <div class="card-body">
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div class="text-center">
+                                <div class="text-sm text-gray-500">Front Door</div>
+                                <div id="frontDoorStatus" class="status-badge status-inactive">Closed</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-sm text-gray-500">Back Door</div>
+                                <div id="backDoorStatus" class="status-badge status-inactive">Closed</div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="text-center">
+                                <div class="text-sm text-gray-500">Garage</div>
+                                <div id="garageDoorStatus" class="status-badge status-inactive">Closed</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-sm text-gray-500">Patio</div>
+                                <div id="patioDoorStatus" class="status-badge status-inactive">Closed</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Smart Lights Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Smart Lights</h2>
+                        <i class="card-icon fas fa-lightbulb"></i>
+                    </div>
+                    <div class="card-body">
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div class="text-center">
+                                <div class="text-sm text-gray-500">Living Room</div>
+                                <div id="livingRoomLight" class="status-badge status-active">On</div>
+                                <button class="btn btn-secondary btn-sm mt-2 toggle-light" data-light="livingRoom">
+                                    Toggle
+                                </button>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-sm text-gray-500">Kitchen</div>
+                                <div id="kitchenLight" class="status-badge status-inactive">Off</div>
+                                <button class="btn btn-secondary btn-sm mt-2 toggle-light" data-light="kitchen">
+                                    Toggle
+                                </button>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="text-center">
+                                <div class="text-sm text-gray-500">Outdoor</div>
+                                <div id="outdoorLight" class="status-badge status-inactive">Off</div>
+                                <button class="btn btn-secondary btn-sm mt-2 toggle-light" data-light="outdoor">
+                                    Toggle
+                                </button>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-sm text-gray-500">Bedroom</div>
+                                <div id="bedroomLight" class="status-badge status-active">On</div>
+                                <button class="btn btn-secondary btn-sm mt-2 toggle-light" data-light="bedroom">
+                                    Toggle
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alerts and Activity Log -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Alerts Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Security Alerts</h2>
+                        <i class="card-icon fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="card-body">
+                        <div id="alertsContainer" class="space-y-3">
+                            <div class="text-center text-gray-500 py-4">
+                                No active alerts
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Activity Log Card -->
+                <div class="card col-span-1 lg:col-span-2">
+                    <div class="card-header">
+                        <h2 class="card-title">Activity Log</h2>
+                        <i class="card-icon fas fa-history"></i>
+                    </div>
+                    <div class="card-body">
+                        <div class="activity-log">
+                            <div class="log-entry">
+                                <span class="log-time">10:42 AM</span>
+                                <i class="log-icon fas fa-info-circle log-info"></i>
+                                <span class="log-message">System disarmed by Admin</span>
+                            </div>
+                            <div class="log-entry">
+                                <span class="log-time">10:30 AM</span>
+                                <i class="log-icon fas fa-lightbulb log-success"></i>
+                                <span class="log-message">Living room lights turned on</span>
+                            </div>
+                            <div class="log-entry">
+                                <span class="log-time">09:15 AM</span>
+                                <i class="log-icon fas fa-door-closed log-success"></i>
+                                <span class="log-message">Front door closed</span>
+                            </div>
+                            <div class="log-entry">
+                                <span class="log-time">09:12 AM</span>
+                                <i class="log-icon fas fa-door-open log-warning"></i>
+                                <span class="log-message">Front door opened</span>
+                            </div>
+                            <div class="log-entry">
+                                <span class="log-time">08:45 AM</span>
+                                <i class="log-icon fas fa-video log-info"></i>
+                                <span class="log-message">Front door camera motion detected</span>
+                            </div>
+                            <div class="log-entry">
+                                <span class="log-time">08:30 AM</span>
+                                <i class="log-icon fas fa-shield-alt log-success"></i>
+                                <span class="log-message">System armed in Away mode</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Camera Status Card -->
-        <div class="card">
-            <i class="fas fa-video device-icon"></i>
-            <h3 class="text-xl font-semibold text-gray-700 mb-2">Front Door Camera</h3>
-            <p id="cameraStatus" class="device-status status-active">Active</p>
+        <!-- Devices Tab -->
+        <div id="devices" class="tab-content">
+            <div class="card mb-6">
+                <div class="card-header">
+                    <h2 class="card-title">Connected Devices</h2>
+                    <i class="card-icon fas fa-plug"></i>
+                </div>
+                <div class="card-body">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
+                            <thead class="bg-gray-50 dark:bg-gray-700">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Device</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Type</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Last Active</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-600">
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 h-10 w-10 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center">
+                                                <i class="fas fa-video text-indigo-600 dark:text-indigo-300"></i>
+                                            </div>
+                                            <div class="ml-4">
+                                                <div class="text-sm font-medium text-gray-900 dark:text-white">Front Door Camera</div>
+                                                <div class="text-sm text-gray-500 dark:text-gray-400">Living Room</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900 dark:text-white">Security Camera</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="status-badge status-active">Online</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">2 minutes ago</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <button class="text-indigo-600 dark:text-indigo-300 hover:text-indigo-900 dark:hover:text-indigo-400 mr-3">View</button>
+                                        <button class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-400">Settings</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 h-10 w-10 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+                                                <i class="fas fa-door-open text-green-600 dark:text-green-300"></i>
+                                            </div>
+                                            <div class="ml-4">
+                                                <div class="text-sm font-medium text-gray-900 dark:text-white">Front Door Sensor</div>
+                                                <div class="text-sm text-gray-500 dark:text-gray-400">Entryway</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900 dark:text-white">Contact Sensor</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="status-badge status-inactive">Closed</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">15 minutes ago</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <button class="text-indigo-600 dark:text-indigo-300 hover:text-indigo-900 dark:hover:text-indigo-400 mr-3">View</button>
+                                        <button class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-400">Settings</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 h-10 w-10 bg-yellow-100 dark:bg-yellow-900 rounded-full flex items-center justify-center">
+                                                <i class="fas fa-walking text-yellow-600 dark:text-yellow-300"></i>
+                                            </div>
+                                            <div class="ml-4">
+                                                <div class="text-sm font-medium text-gray-900 dark:text-white">Living Room Motion</div>
+                                                <div class="text-sm text-gray-500 dark:text-gray-400">Living Room</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900 dark:text-white">Motion Sensor</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="status-badge status-active">No Motion</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">1 hour ago</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <button class="text-indigo-600 dark:text-indigo-300 hover:text-indigo-900 dark:hover:text-indigo-400 mr-3">View</button>
+                                        <button class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-400">Settings</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 h-10 w-10 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                                                <i class="fas fa-lightbulb text-blue-600 dark:text-blue-300"></i>
+                                            </div>
+                                            <div class="ml-4">
+                                                <div class="text-sm font-medium text-gray-900 dark:text-white">Living Room Light</div>
+                                                <div class="text-sm text-gray-500 dark:text-gray-400">Living Room</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900 dark:text-white">Smart Bulb</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="status-badge status-active">On</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">30 minutes ago</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <button class="text-indigo-600 dark:text-indigo-300 hover:text-indigo-900 dark:hover:text-indigo-400 mr-3">View</button>
+                                        <button class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-400">Settings</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 h-10 w-10 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center">
+                                                <i class="fas fa-thermometer-half text-purple-600 dark:text-purple-300"></i>
+                                            </div>
+                                            <div class="ml-4">
+                                                <div class="text-sm font-medium text-gray-900 dark:text-white">Living Room Thermostat</div>
+                                                <div class="text-sm text-gray-500 dark:text-gray-400">Living Room</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900 dark:text-white">Smart Thermostat</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="status-badge status-active">Online</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">5 minutes ago</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <button class="text-indigo-600 dark:text-indigo-300 hover:text-indigo-900 dark:hover:text-indigo-400 mr-3">View</button>
+                                        <button class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-400">Settings</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- Motion Sensor Card -->
-        <div class="card">
-            <i class="fas fa-walking device-icon"></i>
-            <h3 class="text-xl font-semibold text-gray-700 mb-2">Living Room Motion</h3>
-            <p id="motionStatus" class="device-status status-active">No Motion</p>
+        <!-- Analytics Tab -->
+        <div id="analytics" class="tab-content">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Security Events</h2>
+                        <i class="card-icon fas fa-chart-bar"></i>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="securityEventsChart" height="300"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Device Activity</h2>
+                        <i class="card-icon fas fa-chart-pie"></i>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="deviceActivityChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Motion Detection History</h2>
+                    <i class="card-icon fas fa-chart-line"></i>
+                </div>
+                <div class="card-body">
+                    <canvas id="motionHistoryChart" height="150"></canvas>
+                </div>
+            </div>
         </div>
 
-        <!-- Door/Window Sensor Card -->
-        <div class="card">
-            <i class="fas fa-door-open device-icon"></i>
-            <h3 class="text-xl font-semibold text-gray-700 mb-2">Back Door Sensor</h3>
-            <p id="doorStatus" class="device-status status-inactive">Closed</p>
+        <!-- Settings Tab -->
+        <div id="settings" class="tab-content">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="card lg:col-span-2">
+                    <div class="card-header">
+                        <h2 class="card-title">System Settings</h2>
+                        <i class="card-icon fas fa-cog"></i>
+                    </div>
+                    <div class="card-body">
+                        <form class="space-y-6">
+                            <div>
+                                <label for="systemName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">System Name</label>
+                                <input type="text" id="systemName" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white" value="My Smart Home">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Security Mode</label>
+                                <div class="space-y-2">
+                                    <div class="flex items-center">
+                                        <input id="mode-home" name="security-mode" type="radio" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300" checked>
+                                        <label for="mode-home" class="ml-3 block text-sm font-medium text-gray-700 dark:text-gray-300">Home (Only monitor entry points)</label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input id="mode-away" name="security-mode" type="radio" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300">
+                                        <label for="mode-away" class="ml-3 block text-sm font-medium text-gray-700 dark:text-gray-300">Away (Monitor all areas)</label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input id="mode-night" name="security-mode" type="radio" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300">
+                                        <label for="mode-night" class="ml-3 block text-sm font-medium text-gray-700 dark:text-gray-300">Night (Strict monitoring with alarms)</label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label for="alarmDuration" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Alarm Duration (seconds)</label>
+                                <input type="number" id="alarmDuration" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white" value="30" min="10" max="300">
+                            </div>
+                            
+                            <div>
+                                <label for="alarmSound" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Alarm Sound</label>
+                                <select id="alarmSound" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white">
+                                    <option>Standard Alarm</option>
+                                    <option>Police Siren</option>
+                                    <option>High Pitch</option>
+                                    <option>Pulsing Alarm</option>
+                                </select>
+                            </div>
+                            
+                            <div class="flex items-center">
+                                <input id="enableNotifications" type="checkbox" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded" checked>
+                                <label for="enableNotifications" class="ml-3 block text-sm font-medium text-gray-700 dark:text-gray-300">Enable Push Notifications</label>
+                            </div>
+                            
+                            <div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save mr-2"></i> Save Settings
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">User Management</h2>
+                        <i class="card-icon fas fa-users"></i>
+                    </div>
+                    <div class="card-body">
+                        <div class="space-y-4">
+                            <div>
+                                <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Authorized Users</h3>
+                                <div class="space-y-2">
+                                    <div class="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded">
+                                        <div class="flex items-center">
+                                            <div class="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white">
+                                                <i class="fas fa-user"></i>
+                                            </div>
+                                            <span class="ml-2 text-sm font-medium dark:text-white">Admin</span>
+                                        </div>
+                                        <span class="text-xs bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 px-2 py-1 rounded-full">Owner</span>
+                                    </div>
+                                    <div class="flex items-center justify-between p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded">
+                                        <div class="flex items-center">
+                                            <div class="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white">
+                                                <i class="fas fa-user"></i>
+                                            </div>
+                                            <span class="ml-2 text-sm font-medium dark:text-white">Jane Smith</span>
+                                        </div>
+                                        <span class="text-xs bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-2 py-1 rounded-full">Admin</span>
+                                    </div>
+                                    <div class="flex items-center justify-between p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded">
+                                        <div class="flex items-center">
+                                            <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white">
+                                                <i class="fas fa-user"></i>
+                                            </div>
+                                            <span class="ml-2 text-sm font-medium dark:text-white">Mike Johnson</span>
+                                        </div>
+                                        <span class="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded-full">User</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Add New User</h3>
+                                <div class="flex space-x-2">
+                                    <input type="email" placeholder="Email address" class="flex-grow px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white">
+                                    <button class="btn btn-primary">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Access Logs</h3>
+                                <div class="space-y-2">
+                                    <div class="flex items-center justify-between text-sm p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded">
+                                        <span class="dark:text-white">Admin logged in</span>
+                                        <span class="text-gray-500 dark:text-gray-400 text-xs">2 min ago</span>
+                                    </div>
+                                    <div class="flex items-center justify-between text-sm p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded">
+                                        <span class="dark:text-white">Jane Smith disarmed system</span>
+                                        <span class="text-gray-500 dark:text-gray-400 text-xs">15 min ago</span>
+                                    </div>
+                                    <div class="flex items-center justify-between text-sm p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded">
+                                        <span class="dark:text-white">Mike Johnson viewed camera</span>
+                                        <span class="text-gray-500 dark:text-gray-400 text-xs">1 hour ago</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-
-        <!-- Light Control Card (Example) -->
-        <div class="card">
-            <i class="fas fa-lightbulb device-icon"></i>
-            <h3 class="text-xl font-semibold text-gray-700 mb-2">Outdoor Lights</h3>
-            <p id="lightStatus" class="device-status status-active">On</p>
-            <button id="toggleLight" class="mt-4 control-button bg-blue-500 hover:bg-blue-600 text-white">Toggle Light</button>
-        </div>
-
     </div>
 
     <script>
+        // DOM Elements
         const securityStatus = document.getElementById('securityStatus');
         const armButton = document.getElementById('armButton');
         const disarmButton = document.getElementById('disarmButton');
-        const cameraStatus = document.getElementById('cameraStatus');
-        const motionStatus = document.getElementById('motionStatus');
-        const doorStatus = document.getElementById('doorStatus');
-        const lightStatus = document.getElementById('lightStatus');
-        const toggleLightButton = document.getElementById('toggleLight');
-
+        const panicButton = document.getElementById('panicButton');
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const notificationCount = document.getElementById('notificationCount');
+        const notificationsButton = document.getElementById('notificationsButton');
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const toggleLightButtons = document.querySelectorAll('.toggle-light');
+        const alertsContainer = document.getElementById('alertsContainer');
+        
+        // Device status elements
+        const livingRoomMotion = document.getElementById('livingRoomMotion');
+        const kitchenMotion = document.getElementById('kitchenMotion');
+        const backDoorMotion = document.getElementById('backDoorMotion');
+        const garageMotion = document.getElementById('garageMotion');
+        const frontDoorStatus = document.getElementById('frontDoorStatus');
+        const backDoorStatus = document.getElementById('backDoorStatus');
+        const garageDoorStatus = document.getElementById('garageDoorStatus');
+        const patioDoorStatus = document.getElementById('patioDoorStatus');
+        const livingRoomLight = document.getElementById('livingRoomLight');
+        const kitchenLight = document.getElementById('kitchenLight');
+        const outdoorLight = document.getElementById('outdoorLight');
+        const bedroomLight = document.getElementById('bedroomLight');
+        
+        // Weather elements
+        const weatherIcon = document.getElementById('weatherIcon');
+        const temperature = document.getElementById('temperature');
+        const weatherCondition = document.getElementById('weatherCondition');
+        const humidity = document.getElementById('humidity');
+        const windSpeed = document.getElementById('windSpeed');
+        
+        // State variables
         let isArmed = false;
-        let isLightOn = true;
-
-        // Function to update security system status display
-        function updateSecurityStatus() {
-            if (isArmed) {
-                securityStatus.textContent = 'Armed';
-                securityStatus.classList.remove('security-status-disarmed');
-                securityStatus.classList.add('security-status-armed');
+        let isPanicMode = false;
+        let darkMode = false;
+        let notifications = 0;
+        let activeAlerts = [];
+        
+        // Initialize charts
+        let securityEventsChart, deviceActivityChart, motionHistoryChart;
+        
+        // Initialize the dashboard
+        function initDashboard() {
+            updateSecurityStatus();
+            setupEventListeners();
+            simulateWeatherChanges();
+            simulateDeviceChanges();
+            initCharts();
+        }
+        
+        // Setup event listeners
+        function setupEventListeners() {
+            // Security controls
+            armButton.addEventListener('click', armSystem);
+            disarmButton.addEventListener('click', disarmSystem);
+            panicButton.addEventListener('click', togglePanicMode);
+            
+            // UI controls
+            darkModeToggle.addEventListener('click', toggleDarkMode);
+            notificationsButton.addEventListener('click', showNotifications);
+            
+            // Tab navigation
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const tabId = button.getAttribute('data-tab');
+                    switchTab(tabId);
+                });
+            });
+            
+            // Light toggles
+            toggleLightButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const lightId = button.getAttribute('data-light');
+                    toggleLight(lightId);
+                });
+            });
+        }
+        
+        // Security system functions
+        function armSystem() {
+            isArmed = true;
+            isPanicMode = false;
+            updateSecurityStatus();
+            addActivityLog('System armed in Home mode', 'fas fa-shield-alt', 'success');
+            showAlert('System Armed', 'Security system is now active', 'warning');
+        }
+        
+        function disarmSystem() {
+            isArmed = false;
+            isPanicMode = false;
+            updateSecurityStatus();
+            addActivityLog('System disarmed by Admin', 'fas fa-shield-alt', 'info');
+        }
+        
+        function togglePanicMode() {
+            isPanicMode = !isPanicMode;
+            if (isPanicMode) {
+                isArmed = true;
+                updateSecurityStatus();
+                addActivityLog('PANIC ALARM ACTIVATED!', 'fas fa-bell', 'critical');
+                showAlert('Panic Alarm', 'Emergency alarm activated!', 'danger', true);
+                notifications++;
+                updateNotificationBadge();
             } else {
-                securityStatus.textContent = 'Disarmed';
-                securityStatus.classList.remove('security-status-armed');
-                securityStatus.classList.add('security-status-disarmed');
+                updateSecurityStatus();
+                addActivityLog('Panic alarm deactivated', 'fas fa-bell', 'info');
             }
         }
-
-        // Event listeners for arm/disarm buttons
-        armButton.addEventListener('click', () => {
-            isArmed = true;
-            updateSecurityStatus();
-            // In a real system, you'd send an API call to your backend here
-            console.log('System Armed!');
-        });
-
-        disarmButton.addEventListener('click', () => {
-            isArmed = false;
-            updateSecurityStatus();
-            // In a real system, you'd send an API call to your backend here
-            console.log('System Disarmed!');
-        });
-
-        // Event listener for toggling light
-        toggleLightButton.addEventListener('click', () => {
-            isLightOn = !isLightOn;
-            lightStatus.textContent = isLightOn ? 'On' : 'Off';
-            lightStatus.classList.toggle('status-active', isLightOn);
-            lightStatus.classList.toggle('status-inactive', !isLightOn);
-            // In a real system, you'd send an API call to your backend here
-            console.log('Light Toggled:', isLightOn ? 'On' : 'Off');
-        });
-
-        // Initial status update on page load
-        document.addEventListener('DOMContentLoaded', updateSecurityStatus);
-
-        // Simulate device status changes (for demonstration)
-        setInterval(() => {
-            // Simulate motion detection
-            const randomMotion = Math.random();
-            if (randomMotion < 0.1) { // 10% chance of motion
-                motionStatus.textContent = 'Motion Detected!';
-                motionStatus.classList.add('status-alert');
-                motionStatus.classList.remove('status-active');
+        
+        function updateSecurityStatus() {
+            if (isPanicMode) {
+                securityStatus.textContent = 'PANIC MODE';
+                securityStatus.className = 'security-status';
+                securityStatus.classList.add('security-status-armed');
+                securityStatus.style.animation = 'pulse 1s infinite';
+            } else if (isArmed) {
+                securityStatus.textContent = 'Armed';
+                securityStatus.className = 'security-status security-status-armed';
+                securityStatus.style.animation = '';
             } else {
-                motionStatus.textContent = 'No Motion';
-                motionStatus.classList.remove('status-alert');
-                motionStatus.classList.add('status-active');
+                securityStatus.textContent = 'Disarmed';
+                securityStatus.className = 'security-status security-status-disarmed';
+                securityStatus.style.animation = '';
             }
-
-            // Simulate door opening/closing
-            const randomDoor = Math.random();
-            if (randomDoor < 0.05) { // 5% chance of door opening
-                doorStatus.textContent = 'Open!';
-                doorStatus.classList.add('status-alert');
-                doorStatus.classList.remove('status-inactive');
+        }
+        
+        // UI functions
+        function toggleDarkMode() {
+            darkMode = !darkMode;
+            document.body.classList.toggle('dark-mode', darkMode);
+            localStorage.setItem('darkMode', darkMode);
+            
+            // Update charts for dark mode
+            updateChartsForDarkMode();
+        }
+        
+        function switchTab(tabId) {
+            // Update active tab button
+            tabButtons.forEach(button => {
+                if (button.getAttribute('data-tab') === tabId) {
+                    button.classList.add('active');
+                } else {
+                    button.classList.remove('active');
+                }
+            });
+            
+            // Show selected tab content
+            tabContents.forEach(content => {
+                if (content.id === tabId) {
+                    content.classList.add('active');
+                } else {
+                    content.classList.remove('active');
+                }
+            });
+            
+            // Resize charts when tab becomes visible
+            if (tabId === 'analytics') {
+                setTimeout(() => {
+                    securityEventsChart.resize();
+                    deviceActivityChart.resize();
+                    motionHistoryChart.resize();
+                }, 100);
+            }
+        }
+        
+        function updateNotificationBadge() {
+            if (notifications > 0) {
+                notificationCount.textContent = notifications;
+                notificationCount.classList.remove('hidden');
             } else {
-                doorStatus.textContent = 'Closed';
-                doorStatus.classList.remove('status-alert');
-                doorStatus.classList.add('status-inactive');
+                notificationCount.classList.add('hidden');
             }
-
-        }, 5000); // Update every 5 seconds
+        }
+        
+        function showNotifications() {
+            alert(`You have ${notifications} new notifications`);
+            notifications = 0;
+            updateNotificationBadge();
+        }
+        
+        // Device control functions
+        function toggleLight(lightId) {
+            const lightElement = document.getElementById(`${lightId}Light`);
+            const isOn = lightElement.textContent === 'On';
+            
+            lightElement.textContent = isOn ? 'Off' : 'On';
+            lightElement.className = `status-badge ${isOn ? 'status-inactive' : 'status-active'}`;
+            
+            const action = isOn ? 'off' : 'on';
+            addActivityLog(`${lightId.replace(/([A-Z])/g, ' $1').trim()} lights turned ${action}`, 'fas fa-lightbulb', 'success');
+        }
+        
+        // Alert and activity log functions
+        function showAlert(title, message, type = 'info', isCritical = false) {
+            const alertId = Date.now();
+            const alert = { id: alertId, title, message, type, isCritical };
+            activeAlerts.push(alert);
+            
+            if (isCritical) {
+                notifications++;
+                updateNotificationBadge();
+            }
+            
+            renderAlerts();
+        }
+        
+        function dismissAlert(alertId) {
+            activeAlerts = activeAlerts.filter(alert => alert.id !== alertId);
+            renderAlerts();
+        }
+        
+        function renderAlerts() {
+            if (activeAlerts.length === 0) {
+                alertsContainer.innerHTML = '<div class="text-center text-gray-500 py-4">No active alerts</div>';
+                return;
+            }
+            
+            alertsContainer.innerHTML = '';
+            activeAlerts.forEach(alert => {
+                const alertElement = document.createElement('div');
+                alertElement.className = `p-4 rounded-lg mb-3 ${alert.isCritical ? 'alert-card' : ''}`;
+                alertElement.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="font-medium ${alert.isCritical ? 'text-red-600' : ''}">${alert.title}</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">${alert.message}</p>
+                        </div>
+                        <button onclick="dismissAlert(${alert.id})" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                alertsContainer.appendChild(alertElement);
+            });
+        }
+        
+        function addActivityLog(message, icon, type = 'info') {
+            const logContainer = document.querySelector('.activity-log');
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            logEntry.innerHTML = `
+                <span class="log-time">${timeString}</span>
+                <i class="log-icon ${icon} log-${type}"></i>
+                <span class="log-message ${type === 'critical' ? 'font-semibold' : ''}">${message}</span>
+            `;
+            
+            logContainer.insertBefore(logEntry, logContainer.firstChild);
+            
+            // Limit log entries to 50
+            if (logContainer.children.length > 50) {
+                logContainer.removeChild(logContainer.lastChild);
+            }
+        }
+        
+        // Simulation functions
+        function simulateWeatherChanges() {
+            const weatherConditions = [
+                { icon: 'fa-sun', condition: 'Sunny', temp: 72, humidity: 45, wind: 8 },
+                { icon: 'fa-cloud-sun', condition: 'Partly Cloudy', temp: 68, humidity: 50, wind: 6 },
+                { icon: 'fa-cloud', condition: 'Cloudy', temp: 65, humidity: 60, wind: 5 },
+                { icon: 'fa-cloud-rain', condition: 'Rainy', temp: 58, humidity: 85, wind: 10 }
+            ];
+            
+            let currentWeather = 0;
+            
+            setInterval(() => {
+                currentWeather = (currentWeather + 1) % weatherConditions.length;
+                const weather = weatherConditions[currentWeather];
+                
+                weatherIcon.className = `fas ${weather.icon} text-5xl ${weather.icon === 'fa-sun' ? 'text-yellow-400' : 'text-gray-400'}`;
+                temperature.textContent = weather.temp;
+                weatherCondition.textContent = weather.condition;
+                humidity.textContent = weather.humidity;
+                windSpeed.textContent = weather.wind;
+            }, 30000);
+        }
+        
+        function simulateDeviceChanges() {
+            setInterval(() => {
+                // Simulate motion detection (10% chance)
+                if (Math.random() < 0.1) {
+                    const motionSensors = [
+                        { element: livingRoomMotion, location: 'Living Room' },
+                        { element: kitchenMotion, location: 'Kitchen' },
+                        { element: backDoorMotion, location: 'Back Door' },
+                        { element: garageMotion, location: 'Garage' }
+                    ];
+                    
+                    const sensor = motionSensors[Math.floor(Math.random() * motionSensors.length)];
+                    sensor.element.textContent = 'Motion Detected!';
+                    sensor.element.className = 'status-badge status-alert';
+                    
+                    if (isArmed) {
+                        showAlert(`Motion Detected - ${sensor.location}`, `Motion detected in ${sensor.location} while system is armed`, 'danger', true);
+                        notifications++;
+                        updateNotificationBadge();
+                    }
+                    
+                    addActivityLog(`Motion detected in ${sensor.location}`, 'fas fa-walking', isArmed ? 'critical' : 'warning');
+                    
+                    setTimeout(() => {
+                        sensor.element.textContent = 'No Motion';
+                        sensor.element.className = 'status-badge status-active';
+                    }, 5000);
+                }
+                
+                // Simulate door opening (5% chance)
+                if (Math.random() < 0.05) {
+                    const doorSensors = [
+                        { element: frontDoorStatus, location: 'Front Door' },
+                        { element: backDoorStatus, location: 'Back Door' },
+                        { element: garageDoorStatus, location: 'Garage' },
+                        { element: patioDoorStatus, location: 'Patio' }
+                    ];
+                    
+                    const sensor = doorSensors[Math.floor(Math.random() * doorSensors.length)];
+                    sensor.element.textContent = 'Open!';
+                    sensor.element.className = 'status-badge status-alert';
+                    
+                    if (isArmed) {
+                        showAlert(`Door Opened - ${sensor.location}`, `${sensor.location} was opened while system is armed`, 'danger', true);
+                        notifications++;
+                        updateNotificationBadge();
+                    }
+                    
+                    addActivityLog(`${sensor.location} opened`, 'fas fa-door-open', isArmed ? 'critical' : 'warning');
+                    
+                    setTimeout(() => {
+                        sensor.element.textContent = 'Closed';
+                        sensor.element.className = 'status-badge status-inactive';
+                        addActivityLog(`${sensor.location} closed`, 'fas fa-door-closed', 'success');
+                    }, 3000);
+                }
+            }, 5000);
+        }
+        
+        // Chart functions
+        function initCharts() {
+            // Security Events Chart
+            const securityEventsCtx = document.getElementById('securityEventsChart').getContext('2d');
+            securityEventsChart = new Chart(securityEventsCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Motion Events',
+                        data: [12, 19, 3, 5, 2, 3, 15],
+                        backgroundColor: 'rgba(79, 70, 229, 0.7)',
+                        borderColor: 'rgba(79, 70, 229, 1)',
+                        borderWidth: 1
+                    }, {
+                        label: 'Door Events',
+                        data: [8, 15, 2, 6, 3, 7, 10],
+                        backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                        borderColor: 'rgba(239, 68, 68, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: getChartOptions('Security Events This Week')
+            });
+            
+            // Device Activity Chart
+            const deviceActivityCtx = document.getElementById('deviceActivityChart').getContext('2d');
+            deviceActivityChart = new Chart(deviceActivityCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Cameras', 'Motion Sensors', 'Door Sensors', 'Smart Lights', 'Other'],
+                    datasets: [{
+                        data: [35, 25, 20, 15, 5],
+                        backgroundColor: [
+                            'rgba(79, 70, 229, 0.7)',
+                            'rgba(16, 185, 129, 0.7)',
+                            'rgba(239, 68, 68, 0.7)',
+                            'rgba(245, 158, 11, 0.7)',
+                            'rgba(156, 163, 175, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(79, 70, 229, 1)',
+                            'rgba(16, 185, 129, 1)',
+                            'rgba(239, 68, 68, 1)',
+                            'rgba(245, 158, 11, 1)',
+                            'rgba(156, 163, 175, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: getChartOptions('Device Activity Distribution', true)
+            });
+            
+            // Motion History Chart
+            const motionHistoryCtx = document.getElementById('motionHistoryChart').getContext('2d');
+            motionHistoryChart = new Chart(motionHistoryCtx, {
+                type: 'line',
+                data: {
+                    labels: Array(24).fill().map((_, i) => `${i}:00`),
+                    datasets: [{
+                        label: 'Motion Events',
+                        data: Array(24).fill().map(() => Math.floor(Math.random() * 10)),
+                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                        borderColor: 'rgba(79, 70, 229, 1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: getChartOptions('Motion Detection - Last 24 Hours')
+            });
+        }
+        
+        function getChartOptions(title, isDoughnut = false) {
+            const textColor = darkMode ? '#f3f4f6' : '#1f2937';
+            const gridColor = darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+            
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: textColor
+                        }
+                    },
+                    title: {
+                        display: !!title,
+                        text: title,
+                        color: textColor,
+                        font: {
+                            size: 16
+                        }
+                    }
+                },
+                scales: isDoughnut ? undefined : {
+                    x: {
+                        grid: {
+                            color: gridColor
+                        },
+                        ticks: {
+                            color: textColor
+                        }
+                    },
+                    y: {
+                        grid: {
+                            color: gridColor
+                        },
+                        ticks: {
+                            color: textColor
+                        },
+                        beginAtZero: true
+                    }
+                }
+            };
+        }
+        
+        function updateChartsForDarkMode() {
+            const textColor = darkMode ? '#f3f4f6' : '#1f2937';
+            const gridColor = darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+            
+            // Update security events chart
+            securityEventsChart.options.scales.x.ticks.color = textColor;
+            securityEventsChart.options.scales.x.grid.color = gridColor;
+            securityEventsChart.options.scales.y.ticks.color = textColor;
+            securityEventsChart.options.scales.y.grid.color = gridColor;
+            securityEventsChart.options.plugins.title.color = textColor;
+            securityEventsChart.options.plugins.legend.labels.color = textColor;
+            securityEventsChart.update();
+            
+            // Update device activity chart
+            deviceActivityChart.options.plugins.title.color = textColor;
+            deviceActivityChart.options.plugins.legend.labels.color = textColor;
+            deviceActivityChart.update();
+            
+            // Update motion history chart
+            motionHistoryChart.options.scales.x.ticks.color = textColor;
+            motionHistoryChart.options.scales.x.grid.color = gridColor;
+            motionHistoryChart.options.scales.y.ticks.color = textColor;
+            motionHistoryChart.options.scales.y.grid.color = gridColor;
+            motionHistoryChart.options.plugins.title.color = textColor;
+            motionHistoryChart.options.plugins.legend.labels.color = textColor;
+            motionHistoryChart.update();
+        }
+        
+        // Initialize the dashboard when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check for saved dark mode preference
+            darkMode = localStorage.getItem('darkMode') === 'true';
+            if (darkMode) {
+                document.body.classList.add('dark-mode');
+            }
+            
+            initDashboard();
+        });
+        
+        // Make some functions available globally for HTML onclick handlers
+        window.dismissAlert = dismissAlert;
     </script>
 </body>
 </html>
