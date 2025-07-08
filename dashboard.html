@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Home Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #e2e8f0; /* Light blue-gray background */
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+        .dashboard-container {
+            background-color: #ffffff;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 900px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        @media (min-width: 768px) {
+            .dashboard-container {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        .card {
+            background-color: #f8fafc; /* Lighter card background */
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .security-status-armed {
+            background-color: #ef4444; /* Red-500 */
+            color: white;
+            font-weight: bold;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.3s ease;
+        }
+        .security-status-disarmed {
+            background-color: #22c55e; /* Green-500 */
+            color: white;
+            font-weight: bold;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.3s ease;
+        }
+        .control-button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+            margin: 0.5rem;
+        }
+        .arm-button {
+            background-color: #dc2626; /* Red-600 */
+            color: white;
+        }
+        .arm-button:hover {
+            background-color: #b91c1c; /* Red-700 */
+        }
+        .disarm-button {
+            background-color: #16a34a; /* Green-600 */
+            color: white;
+        }
+        .disarm-button:hover {
+            background-color: #15803d; /* Green-700 */
+        }
+        .device-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+            color: #4f46e5; /* Indigo-600 */
+        }
+        .device-status {
+            font-weight: 500;
+            color: #4b5563; /* Gray-700 */
+        }
+        .status-active {
+            color: #22c55e; /* Green-500 */
+        }
+        .status-inactive {
+            color: #ef4444; /* Red-500 */
+        }
+        .status-alert {
+            color: #f59e0b; /* Amber-500 */
+        }
+    </style>
+</head>
+<body>
+    <h1 class="text-4xl font-bold text-gray-800 mb-8">Smart Home Security Dashboard</h1>
+
+    <div class="dashboard-container">
+        <!-- Security System Status Card -->
+        <div class="card col-span-full md:col-span-1">
+            <h3 class="text-2xl font-semibold text-gray-700 mb-4">System Status</h3>
+            <div id="securityStatus" class="security-status-disarmed text-lg">Disarmed</div>
+            <div class="mt-6 flex space-x-4">
+                <button id="armButton" class="control-button arm-button">Arm System</button>
+                <button id="disarmButton" class="control-button disarm-button">Disarm System</button>
+            </div>
+        </div>
+
+        <!-- Camera Status Card -->
+        <div class="card">
+            <i class="fas fa-video device-icon"></i>
+            <h3 class="text-xl font-semibold text-gray-700 mb-2">Front Door Camera</h3>
+            <p id="cameraStatus" class="device-status status-active">Active</p>
+        </div>
+
+        <!-- Motion Sensor Card -->
+        <div class="card">
+            <i class="fas fa-walking device-icon"></i>
+            <h3 class="text-xl font-semibold text-gray-700 mb-2">Living Room Motion</h3>
+            <p id="motionStatus" class="device-status status-active">No Motion</p>
+        </div>
+
+        <!-- Door/Window Sensor Card -->
+        <div class="card">
+            <i class="fas fa-door-open device-icon"></i>
+            <h3 class="text-xl font-semibold text-gray-700 mb-2">Back Door Sensor</h3>
+            <p id="doorStatus" class="device-status status-inactive">Closed</p>
+        </div>
+
+        <!-- Light Control Card (Example) -->
+        <div class="card">
+            <i class="fas fa-lightbulb device-icon"></i>
+            <h3 class="text-xl font-semibold text-gray-700 mb-2">Outdoor Lights</h3>
+            <p id="lightStatus" class="device-status status-active">On</p>
+            <button id="toggleLight" class="mt-4 control-button bg-blue-500 hover:bg-blue-600 text-white">Toggle Light</button>
+        </div>
+
+    </div>
+
+    <script>
+        const securityStatus = document.getElementById('securityStatus');
+        const armButton = document.getElementById('armButton');
+        const disarmButton = document.getElementById('disarmButton');
+        const cameraStatus = document.getElementById('cameraStatus');
+        const motionStatus = document.getElementById('motionStatus');
+        const doorStatus = document.getElementById('doorStatus');
+        const lightStatus = document.getElementById('lightStatus');
+        const toggleLightButton = document.getElementById('toggleLight');
+
+        let isArmed = false;
+        let isLightOn = true;
+
+        // Function to update security system status display
+        function updateSecurityStatus() {
+            if (isArmed) {
+                securityStatus.textContent = 'Armed';
+                securityStatus.classList.remove('security-status-disarmed');
+                securityStatus.classList.add('security-status-armed');
+            } else {
+                securityStatus.textContent = 'Disarmed';
+                securityStatus.classList.remove('security-status-armed');
+                securityStatus.classList.add('security-status-disarmed');
+            }
+        }
+
+        // Event listeners for arm/disarm buttons
+        armButton.addEventListener('click', () => {
+            isArmed = true;
+            updateSecurityStatus();
+            // In a real system, you'd send an API call to your backend here
+            console.log('System Armed!');
+        });
+
+        disarmButton.addEventListener('click', () => {
+            isArmed = false;
+            updateSecurityStatus();
+            // In a real system, you'd send an API call to your backend here
+            console.log('System Disarmed!');
+        });
+
+        // Event listener for toggling light
+        toggleLightButton.addEventListener('click', () => {
+            isLightOn = !isLightOn;
+            lightStatus.textContent = isLightOn ? 'On' : 'Off';
+            lightStatus.classList.toggle('status-active', isLightOn);
+            lightStatus.classList.toggle('status-inactive', !isLightOn);
+            // In a real system, you'd send an API call to your backend here
+            console.log('Light Toggled:', isLightOn ? 'On' : 'Off');
+        });
+
+        // Initial status update on page load
+        document.addEventListener('DOMContentLoaded', updateSecurityStatus);
+
+        // Simulate device status changes (for demonstration)
+        setInterval(() => {
+            // Simulate motion detection
+            const randomMotion = Math.random();
+            if (randomMotion < 0.1) { // 10% chance of motion
+                motionStatus.textContent = 'Motion Detected!';
+                motionStatus.classList.add('status-alert');
+                motionStatus.classList.remove('status-active');
+            } else {
+                motionStatus.textContent = 'No Motion';
+                motionStatus.classList.remove('status-alert');
+                motionStatus.classList.add('status-active');
+            }
+
+            // Simulate door opening/closing
+            const randomDoor = Math.random();
+            if (randomDoor < 0.05) { // 5% chance of door opening
+                doorStatus.textContent = 'Open!';
+                doorStatus.classList.add('status-alert');
+                doorStatus.classList.remove('status-inactive');
+            } else {
+                doorStatus.textContent = 'Closed';
+                doorStatus.classList.remove('status-alert');
+                doorStatus.classList.add('status-inactive');
+            }
+
+        }, 5000); // Update every 5 seconds
+    </script>
+</body>
+</html>

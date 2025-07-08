@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register Account</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5; /* Light gray background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+        .form-container {
+            background-color: #ffffff;
+            padding: 2.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        .input-field {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #4f46e5; /* Indigo-600 */
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.5); /* Indigo-500 with opacity */
+        }
+        .submit-button {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: #4f46e5; /* Indigo-600 */
+            color: white;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .submit-button:hover {
+            background-color: #4338ca; /* Indigo-700 */
+        }
+        .message {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            font-weight: 500;
+        }
+        .message.success {
+            background-color: #d1fae5; /* Green-100 */
+            color: #065f46; /* Green-800 */
+        }
+        .message.error {
+            background-color: #fee2e2; /* Red-100 */
+            color: #991b1b; /* Red-800 */
+        }
+        .link-text {
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: #6b7280; /* Gray-500 */
+        }
+        .link-text a {
+            color: #4f46e5; /* Indigo-600 */
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .link-text a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h2 class="text-3xl font-bold text-center text-gray-800 mb-6">Create an Account</h2>
+        <form id="registrationForm">
+            <div class="mb-4">
+                <label for="username" class="block text-gray-700 text-sm font-medium mb-2">Username</label>
+                <input type="text" id="username" name="username" class="input-field" placeholder="Enter your username" required>
+            </div>
+            <div class="mb-4">
+                <label for="email" class="block text-gray-700 text-sm font-medium mb-2">Email</label>
+                <input type="email" id="email" name="email" class="input-field" placeholder="Enter your email" required>
+            </div>
+            <div class="mb-6">
+                <label for="password" class="block text-gray-700 text-sm font-medium mb-2">Password</label>
+                <input type="password" id="password" name="password" class="input-field" placeholder="Enter your password" required>
+            </div>
+            <button type="submit" class="submit-button">Register</button>
+        </form>
+        <div id="messageArea" class="message hidden"></div>
+        <div class="link-text">
+            Already have an account? <a href="login.html">Login here</a>
+        </div>
+    </div>
+
+    <script>
+        const registrationForm = document.getElementById('registrationForm');
+        const messageArea = document.getElementById('messageArea');
+
+        registrationForm.addEventListener('submit', async (event) => {
+            event.preventDefault(); // Prevent default form submission
+
+            messageArea.classList.add('hidden'); // Hide previous messages
+            messageArea.classList.remove('success', 'error'); // Clear previous styles
+
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('http://localhost:3000/users/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, email, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) { // Check if status is 2xx
+                    messageArea.textContent = data.message;
+                    messageArea.classList.add('success');
+                    registrationForm.reset(); // Clear form fields
+                } else {
+                    messageArea.textContent = data.message || 'Registration failed. Please try again.';
+                    messageArea.classList.add('error');
+                }
+            } catch (error) {
+                console.error('Network error or unexpected issue:', error);
+                messageArea.textContent = 'An unexpected error occurred. Please try again later.';
+                messageArea.classList.add('error');
+            } finally {
+                messageArea.classList.remove('hidden'); // Show message
+            }
+        });
+    </script>
+</body>
+</html>
